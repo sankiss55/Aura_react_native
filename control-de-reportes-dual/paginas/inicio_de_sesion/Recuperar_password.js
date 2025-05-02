@@ -2,26 +2,56 @@ import { Modal,Alert,Pressable,  KeyboardAvoidingView, Platform, StyleSheet, Tex
 import Icon from 'react-native-vector-icons/Ionicons';
 import Bolitas from "../../componentes/componentes_login/bolitas";
 import estilos_importados from "../../estilos/estilos_login/estilos_login_contrasena";
+import axios from 'axios';
 import { useState } from "react";
 import { useToast } from 'react-native-toast-notifications';
+import { API_URL } from '../../otros/configuracion';  
 export default function Recuperar_password(){
     const toast = useToast();
-    const [password, setpassword]=useState('');
+    const [gmai, setgmail]=useState('');
     
   const [codigo, setCodigo] = useState('');
   const [visible, setVisible] = useState(false);
+  const [codigoGmail, setCodigoGmail] = useState(0);
     function comprobar_contrasena() {
        
         const formato = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-        if (!formato.test(password)) {
+        if (!formato.test(gmai)) {
           toast.show("Por favor, ingrese un correo electrónico válido.", { type:'error'});
           return;
         }
-        setVisible(true);
-        // aqui mandaras la peticon a la api que hagas para mandar el correo electronico y como respuestas le mandaras el codigo de validacion para despues validar si es el bueno o no usa un  toast.show si esta mal el numero o pon el la contraseña de bd 
+        axios.post(`${API_URL}/correo_recuperacion_password.php`,{
+          correo_usuario:gmai
+        }).then(function (respuesta) { console.log(respuesta.data.codigo);
+          if(respuesta.data.success==false){
+            toast.show("El correo no corresponde a un usuario existente", { type:'error'});
+            return;
+          }
+          setCodigoGmail(respuesta.data.codigo);
+          
+          setVisible(true);
+          }).catch(function (error) { console.log(error)  });
+        
       }
-      
+      function validar_codigo(){
+        if(codigoGmail!=codigo){
+          toast.show("El codigo no es el correcto, Verifiquelo y vuelva a intentar", { type:'error'});
+        }else{
+          axios.post(`${API_URL}/buscar_password_usuario.php`,{
+            correo:gmai
+          }).then(function (respuesta) { 
+           
+            toast.show("La contraseña es: " + respuesta.data.contraseña, { type: 'error', duration: 5000 });
+
+              return;
+            }).catch(function (error) { console.log(error)  
+              toast.show('Hubo un error al buscar la contraseña');});
+              setVisible(false);
+              setgmail('');
+              setCodigo('');
+        }
+      }
     return (
          <View
                         style={estilos.contenedor}
@@ -35,7 +65,7 @@ export default function Recuperar_password(){
         </Text>
         <View style={estilos_importados.contenedores_inputs}>
         <Icon name="mail" size={30} />
-        <TextInput style={estilos_importados.inputs} onChangeText={setpassword} value={password} placeholder="Ingrese su correo electronico estudiantil" keyboardType='email-address' />
+        <TextInput style={estilos_importados.inputs} onChangeText={setgmail} value={gmai} placeholder="Ingrese su correo electronico estudiantil" keyboardType='email-address' />
         </View>
         <TouchableOpacity style={[estilos_importados.boton,{backgroundColor:'#99d4eb'}]} onPress={comprobar_contrasena} >
                         <Text style={estilos_importados.botonTexto}>Recuperar Contraseña</Text>
@@ -60,7 +90,7 @@ export default function Recuperar_password(){
             />
 
             <View style={estilos.botones}>
-              <Pressable style={estilos.boton} >
+              <Pressable style={estilos.boton} onPress={validar_codigo} >
                 <Text style={estilos.textoBoton}>Validar</Text>
               </Pressable>
               <Pressable style={[estilos.boton, estilos.botonCerrar]} onPress={() => setVisible(false)}>

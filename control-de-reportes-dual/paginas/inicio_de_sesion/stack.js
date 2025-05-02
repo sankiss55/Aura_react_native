@@ -1,9 +1,9 @@
+import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
+import { ToastProvider } from 'react-native-toast-notifications'; // <-- Importar
+import drawer from "../Aplicacion/drawer";
 import Login from "./Login";
 import Recuperar_password from "./Recuperar_password";
-import { NavigationContainer } from "@react-navigation/native";
-import { ToastProvider } from 'react-native-toast-notifications'; // <-- Importar
-
 const Stack = createStackNavigator();
 
 export default function stack() {
@@ -20,7 +20,12 @@ export default function stack() {
             name="Recuperar Contraseña"
             component={Recuperar_password}
             options={{ headerShown: false }}
-          />
+          /> 
+          <Stack.Screen
+          name="drawer"
+          component={drawer}
+          options={{ headerShown: false }}
+        />
         </Stack.Navigator>
       </NavigationContainer>
     </ToastProvider>
