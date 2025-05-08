@@ -3,14 +3,15 @@ import { Text, View, StyleSheet, TouchableOpacity, ScrollView } from "react-nati
 import Icon from "react-native-vector-icons/Ionicons";
 import axios from "axios";
 import { API_URL } from "../../otros/configuracion";
-
+import { useFocusEffect } from '@react-navigation/native';
 import { useNavigation } from '@react-navigation/native'; 
 export default function Semanas({ route }) {
     const navigation = useNavigation(); 
   const { matricula, id_escolar } = route.params;
   const [semanas, setSemanas] = useState([]);
 
-  useEffect(() => {
+ useFocusEffect(
+            React.useCallback(() => {
     axios.post(`${API_URL}/semanas_dependiendo_ciclo.php`, { id_ciclo: id_escolar })
       .then(res => {
         if (res.data.success) {
@@ -22,8 +23,8 @@ export default function Semanas({ route }) {
       .catch(error => {
         console.log('Error al obtener semanas:', error);
       });
-  }, [id_escolar]);
-
+}, [id_escolar])
+);
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Semanas del Ciclo Escolar</Text>

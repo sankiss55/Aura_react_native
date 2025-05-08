@@ -3,12 +3,12 @@ import { WebView } from "react-native-webview";
 import { View, StyleSheet } from "react-native";
 
 export default function VisorPDF({ route }) {
-  const { uri } = route.params;
+  const { uri_p } = route.params;
 
   return (
     <View style={{ flex: 1 }}>
       <WebView
-        source={{ uri: `https://docs.google.com/viewer?url=https://tikisweb.42web.io/santy.pdf` }}
+        source={{ uri: uri_p }}
         style={styles.webview}
         startInLoadingState={true}
       />

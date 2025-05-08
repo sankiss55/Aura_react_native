@@ -5,9 +5,14 @@ import { SelectList } from 'react-native-dropdown-select-list';
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Agregar_btn from "../../componentes/componentes_app/agregar";
-
+import { useFocusEffect } from '@react-navigation/native';
+import React from "react";
 import { API_URL } from '../../otros/configuracion'; 
+
 export default function Semanas() {
+  const [semanaSeleccionada, setSemanaSeleccionada] = useState(null);
+const [modoEdicion, setModoEdicion] = useState(false);
+
     const [cicloSeleccionado, setCicloSeleccionado] = useState("");
     const [listaCiclos, setListaCiclos] = useState([]);
       const [username, setUsername] = useState('');
@@ -22,13 +27,34 @@ export default function Semanas() {
   const [añoFin, setAñoFin] = useState('');
     const [debounceTimeout, setDebounceTimeout] = useState(null);
   const [semanas, setsemanas]=useState();
+  
+  const abrirModalEditar = (semana) => {
+    setSemanaSeleccionada(semana);
+    setModoEdicion(true);
+    setModalAgregarVisible(true);
+  
+    setNombreCiclo(semana.nombre_semana);
+  
+    const fechaInicio = new Date(semana.fecha_inicial);
+    const fechaFin = new Date(semana.fecha_final);
+  
+    setDiaInicio(String(fechaInicio.getDate()));
+    setMesInicio(String(fechaInicio.getMonth() + 1));
+    setAñoInicio(String(fechaInicio.getFullYear()));
+  
+    setDiaFin(String(fechaFin.getDate()));
+    setMesFin(String(fechaFin.getMonth() + 1));
+    setAñoFin(String(fechaFin.getFullYear()));
+  
+    setCicloSeleccionado(String(semana.id_ciclo)); 
+  };
+  
   const handleChange = (text) => {
     setUsername(text);
 
     if (debounceTimeout) {
       clearTimeout(debounceTimeout);
     }
-
     const timeout = setTimeout(() => {
       buscarUsuario(text);
     }, 500);
@@ -57,14 +83,21 @@ export default function Semanas() {
       if (response.data.success) {
 console.log(response.data.semanas);
         setUsuarios(response.data.semanas);  // Suponiendo que la respuesta tiene un campo 'usuarios' con la lista de ciclos
-        const opciones = response.data.semanas.map((item) => ({
-            key: item.id_ciclo.toString(),  // Asegúrate de que sea string
-            value: item.nombre_ciclo + '( Fecha de inicio: ' +item.fecha_inicio+' Fecha final: '+item.fecha_fin+ ')'
-          }));
-          return opciones;
-      } else {
-        Alert.alert("Error", "No se pudieron obtener los ciclos.");
-      }
+        const opciones = [];
+        const ciclosUnicos = new Set();  
+        response.data.semanas.forEach((item) => {
+          if (!ciclosUnicos.has(item.id_ciclo)) {
+            ciclosUnicos.add(item.id_ciclo);  
+            opciones.push({
+              key: item.id_ciclo.toString(),  // Asegúrate de que sea string
+              value: item.nombre_ciclo + '( Fecha de inicio: ' + item.fecha_inicio + ' Fecha final: ' + item.fecha_fin + ')'
+            });
+          }
+        });
+        
+        return opciones;
+        
+      } 
     } catch (error) {
       Alert.alert("Error", "Hubo un problema al obtener los ciclos.");
     }
@@ -97,65 +130,66 @@ console.log(response.data.semanas);
     
     // obtenerciclos();
   };
-    useEffect(() => {
+  useFocusEffect(
+    React.useCallback(() => {
         const fetchCiclos = async () => {
           const opciones = await obtenerciclos(); // Espera el resultado
           setListaCiclos(opciones || []); // Lo asigna correctamente
         };
       
         fetchCiclos();
-      }, []);
-      
+      }, [])
+    );
 
- 
-  function guardar_ciclo_escolar() {
-    if (!diaInicio || !mesInicio || !añoInicio || !diaFin || !mesFin || !añoFin) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Por favor ingresa todas las fechas.',
-      });
-      return;
-    }
-  
-    const fechaInicioSQL = `${añoInicio}-${mesInicio.padStart(2, '0')}-${diaInicio.padStart(2, '0')}`;
-    const fechaFinSQL = `${añoFin}-${mesFin.padStart(2, '0')}-${diaFin.padStart(2, '0')}`;
-  
-    const fechaInicioObj = new Date(fechaInicioSQL);
-    const fechaFinObj = new Date(fechaFinSQL);
-  
-    if (fechaInicioObj > fechaFinObj) {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'La fecha de inicio no puede ser posterior a la fecha de fin.',
-      });
-      return;
-    }
-  
-  alert(cicloSeleccionado);
-    axios.post(`${API_URL}/guardar_semana.php`, {
-      nombreCiclo,
-      fechaInicio: fechaInicioSQL,
-      fechaFin: fechaFinSQL,
-      idCiclo: cicloSeleccionado
-    })
-    .then(function (respuesta) {
-        console.log(respuesta.data.message);
-      if (respuesta.data.success === false) {
-        Toast.show({
-          type: 'error',
-          text1: 'Error',
-          text2: respuesta.data.message,
-        });
-      } else {
-        Toast.show({
-          type: 'success',
-          text1: 'Listo',
-          text2: respuesta.data.message,
-        });
-        obtenerciclos();
-        // Limpiar campos
+      function guardar_ciclo_escolar() {
+        if (!diaInicio || !mesInicio || !añoInicio || !diaFin || !mesFin || !añoFin) {
+          Toast.show({ type: 'error', text1: 'Error', text2: 'Por favor ingresa todas las fechas.' });
+          return;
+        }
+      
+        const fechaInicioSQL = `${añoInicio}-${mesInicio.padStart(2, '0')}-${diaInicio.padStart(2, '0')}`;
+        const fechaFinSQL = `${añoFin}-${mesFin.padStart(2, '0')}-${diaFin.padStart(2, '0')}`;
+      
+        if (new Date(fechaInicioSQL) > new Date(fechaFinSQL)) {
+          Toast.show({ type: 'error', text1: 'Error', text2: 'La fecha de inicio no puede ser posterior.' });
+          return;
+        }
+      
+      
+        if (modoEdicion && semanaSeleccionada) {
+          axios.post(`${API_URL}/actualizar_semana.php`, {
+            nombreCiclo,
+            fechaInicio: fechaInicioSQL,
+            fechaFin: fechaFinSQL,
+            idCiclo: cicloSeleccionado,
+            idSemana: semanaSeleccionada.id_semanas
+          })
+          .then(respuesta => {
+            Toast.show({ type: 'success', text1: 'Actualizado', text2: respuesta.data.message });
+            limpiarFormulario();
+            obtenerciclos();
+          })
+          .catch(error => {
+            console.error(error);
+            Toast.show({ type: 'error', text1: 'Error', text2: 'No se pudo actualizar.' });
+          });
+        } else {
+          axios.post(`${API_URL}/guardar_semana.php`, { nombreCiclo,
+            fechaInicio: fechaInicioSQL,
+            fechaFin: fechaFinSQL,
+            idCiclo: cicloSeleccionado,})
+          .then(respuesta => {
+            Toast.show({ type: 'success', text1: 'Guardado', text2: respuesta.data.message });
+            limpiarFormulario();
+            obtenerciclos();
+          })
+          .catch(() => {
+            Toast.show({ type: 'error', text1: 'Error', text2: 'No se pudo guardar.' });
+          });
+        }
+      }
+      
+      function limpiarFormulario() {
         setNombreCiclo('');
         setDiaInicio('');
         setMesInicio('');
@@ -164,20 +198,15 @@ console.log(response.data.semanas);
         setMesFin('');
         setAñoFin('');
         setCicloSeleccionado('');
+        setModoEdicion(false);
+        setSemanaSeleccionada(null);
         setModalAgregarVisible(false);
       }
-    })
-    .catch(function () {
-      Toast.show({
-        type: 'error',
-        text1: 'Error',
-        text2: 'Por ahora no se puede hacer esa acción.',
-      });
-    });
-  }
-  
+      
   return (
     <View style={style.container}>
+      
+            <Text style={style.title}>Buscar Semans</Text>
         <TextInput
                 style={style.input}
                 placeholder="Ingresa el nombre de la semana"
@@ -198,7 +227,8 @@ console.log(response.data.semanas);
                <View style={style.buttonsContainer}>
                <TouchableOpacity
                 style={style.modifyButton}
-               
+               onPress={() => abrirModalEditar(usuario)}
+
               >
                 <Icon name="pencil" size={20} color="#fff" />
                 <Text style={style.buttonText}>Modificar</Text>
@@ -290,16 +320,27 @@ console.log(response.data.semanas);
               />
             </View>
             <Text>Selecciona ciclo escolar:</Text>
-<SelectList
+            <SelectList
   setSelected={(val) => setCicloSeleccionado(val)}
   data={listaCiclos}
   placeholder="Selecciona un ciclo"
   boxStyles={{ marginBottom: 10 }}
+  defaultOption={
+    modoEdicion && semanaSeleccionada
+      ? {
+          key: semanaSeleccionada.id_ciclo.toString(),
+          value: listaCiclos.find(op => op.key === semanaSeleccionada.id_ciclo.toString())?.value || ''
+        }
+      : undefined
+  }
 />
+
             <View style={style.buttonContainer}>
               <TouchableOpacity
                 style={style.buttonCancelar}
-                onPress={() => setModalAgregarVisible(false)}
+                onPress={() => {setModalAgregarVisible(false);
+                  limpiarFormulario();
+                }}
               >
                 <Text style={style.buttonText}>Cancelar</Text>
               </TouchableOpacity>
@@ -357,10 +398,12 @@ const style = StyleSheet.create({
     elevation: 5,
   },
   title: {
-    fontSize: 20,
-    marginBottom: 15,
-    fontWeight: 'bold',
-    textAlign: 'center',
+      fontSize: 28,
+      fontWeight: 'bold',
+      marginBottom: 20,
+      textAlign: 'center',
+      color: '#2C3E50', // Color más profesional
+
   },
   input: {
     borderBottomWidth: 1,

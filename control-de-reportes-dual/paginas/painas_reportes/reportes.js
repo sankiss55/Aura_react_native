@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Agregar_btn from "../../componentes/componentes_app/agregar";
 import { Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
 import axios from "axios";
@@ -9,11 +9,14 @@ import * as DocumentPicker from 'expo-document-picker';
 import { TextInput } from "react-native";
 import { SelectList } from 'react-native-dropdown-select-list';
 import * as FileSystem from 'expo-file-system';
-
+import { useFocusEffect } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+
+import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Reportes({ route }) {
   const [archivoPDF, setArchivoPDF] = useState(null);
 
+  const [idTipo, setIdTipo] = useState(null);
   const [nombreArchivo, setNombreArchivo] = useState('');
   const [modalAgregarVisible, setModalAgregarVisible] = useState(false);
   const { id_semana, matricula_alumno, id_escolar } = route.params;
@@ -40,6 +43,15 @@ export default function Reportes({ route }) {
       console.log('Error al seleccionar archivo:', error);
     }
   };
+   useFocusEffect(
+      React.useCallback(() => {
+        const obtenerTipo = async () => {
+          const tipo = await AsyncStorage.getItem('id_tipo');
+          setIdTipo(parseInt(tipo));
+        };
+        obtenerTipo();
+      }, [])
+    );
 function buscar_usuarios(){
   axios
   .post(`${API_URL}/buscar_reportes.php`, {
@@ -58,10 +70,13 @@ function buscar_usuarios(){
     console.log("Error al obtener reportes:", error);
   });
 };
-  useEffect(() => {
+    useFocusEffect(
+           React.useCallback(() => {
     buscar_usuarios();
-  }, []);
-  useEffect(() => {
+  }, [])
+);
+useFocusEffect(
+  React.useCallback(() => {
     axios
       .post(`${API_URL}/buscar_estado.php`)
       .then((res) => {
@@ -78,7 +93,8 @@ function buscar_usuarios(){
       .catch((error) => {
         console.log("Error en axios:", error);
       });
-  }, []);
+    }, [])
+  );
   const enviarReporte = async () => {
     if (!archivoPDF || !nombreArchivo || !estadoSeleccionado) {
       Toast.show({
@@ -274,7 +290,11 @@ function buscar_usuarios(){
       </Modal>
 
       {/* BOTÓN AGREGAR */}
+      {
+idTipo !==3 && (
       <Agregar_btn onPress={() => setModalAgregarVisible(true)} />
+)
+    }
     </View>
 
   );

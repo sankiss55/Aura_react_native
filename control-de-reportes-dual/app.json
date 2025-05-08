@@ -4,11 +4,11 @@
     "slug": "control-de-reportes-dual",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/cecyto.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/cecyto.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -17,13 +17,13 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/cecyto.png",
         "backgroundColor": "#ffffff"
       },
       "package": "com.santiago_vs.controldereportesdual"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/cecyto.png"
     },
     "plugins": [
       "expo-font"
@@ -32,6 +32,12 @@
       "eas": {
         "projectId": "b51f341c-9fab-450c-ad25-97a869fc4099"
       }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b51f341c-9fab-450c-ad25-97a869fc4099"
     }
   }
 }

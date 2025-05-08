@@ -7,7 +7,7 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import { API_URL } from "../../otros/configuracion";
 
-export default function Ciclos_escolares() {
+export default function Ciclos_escolares_all() {
   const [ciclos, setCiclos] = useState([]);
   const navigation = useNavigation(); 
 
@@ -28,7 +28,6 @@ export default function Ciclos_escolares() {
         <Text style={styles.title}>Ciclos Escolares</Text>
      <ScrollView contentContainerStyle={styles.container}>
   {ciclos
-    .filter((ciclo) => ciclo.activo === 1) 
     .map((ciclo) => (
       <TouchableOpacity
         key={ciclo.id_ciclo}

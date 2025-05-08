@@ -1,6 +1,6 @@
 import { NavigationContainer } from "@react-navigation/native";
 import { createStackNavigator } from "@react-navigation/stack";
-import { ToastProvider } from 'react-native-toast-notifications'; // <-- Importar
+import { ToastProvider } from 'react-native-toast-notifications'; 
 import drawer from "../Aplicacion/drawer";
 import Login from "./Login";
 import Recuperar_password from "./Recuperar_password";

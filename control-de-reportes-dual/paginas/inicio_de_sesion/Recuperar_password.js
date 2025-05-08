@@ -5,11 +5,17 @@ import estilos_importados from "../../estilos/estilos_login/estilos_login_contra
 import axios from 'axios';
 import { useState } from "react";
 import { useToast } from 'react-native-toast-notifications';
-import { API_URL } from '../../otros/configuracion';  
+import { API_URL } from '../../otros/configuracion'; 
+import { ActivityIndicator } from 'react-native'; 
 export default function Recuperar_password(){
+  
     const toast = useToast();
+    const [modalNuevaContrasenaVisible, setModalNuevaContrasenaVisible] = useState(false);
+const [nuevaContrasena, setNuevaContrasena] = useState('');
+const [confirmarContrasena, setConfirmarContrasena] = useState('');
+
     const [gmai, setgmail]=useState('');
-    
+    const [cargando, setCargando] = useState(false);
   const [codigo, setCodigo] = useState('');
   const [visible, setVisible] = useState(false);
   const [codigoGmail, setCodigoGmail] = useState(0);
@@ -18,40 +24,66 @@ export default function Recuperar_password(){
         const formato = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
         if (!formato.test(gmai)) {
-          toast.show("Por favor, ingrese un correo electrónico válido.", { type:'error'});
+          toast.show("Por favor, ingrese un correo electrónico válido.", { type:'error', placement: 'top'});
           return;
         }
+        setCargando(true);
+        
         axios.post(`${API_URL}/correo_recuperacion_password.php`,{
           correo_usuario:gmai
         }).then(function (respuesta) { console.log(respuesta.data.codigo);
           if(respuesta.data.success==false){
-            toast.show("El correo no corresponde a un usuario existente", { type:'error'});
+            toast.show("El correo no corresponde a un usuario existente", { type:'error', placement: 'top'});
+            setCargando(false);
             return;
           }
           setCodigoGmail(respuesta.data.codigo);
           
           setVisible(true);
-          }).catch(function (error) { console.log(error)  });
+          }).catch(function (error) { console.log(error)  }).finally(() => {
+            setCargando(false); 
+          });
         
       }
-      function validar_codigo(){
-        if(codigoGmail!=codigo){
-          toast.show("El codigo no es el correcto, Verifiquelo y vuelva a intentar", { type:'error'});
-        }else{
-          axios.post(`${API_URL}/buscar_password_usuario.php`,{
-            correo:gmai
-          }).then(function (respuesta) { 
-           
-            toast.show("La contraseña es: " + respuesta.data.contraseña, { type: 'error', duration: 5000 });
-
-              return;
-            }).catch(function (error) { console.log(error)  
-              toast.show('Hubo un error al buscar la contraseña');});
-              setVisible(false);
-              setgmail('');
-              setCodigo('');
+      function validar_codigo() {
+        if (codigoGmail != codigo) {
+          toast.show("El código no es el correcto, verifíquelo y vuelva a intentar", { type: 'error' , placement: 'top'});
+        } else {
+          setVisible(false);
+          setModalNuevaContrasenaVisible(true);
         }
       }
+      function guardar_nueva_contrasena() {
+        if (nuevaContrasena.length < 6) {
+          toast.show("La contraseña debe tener al menos 6 caracteres", { type: 'error' , placement: 'top'});
+          return;
+        }
+      
+        if (nuevaContrasena !== confirmarContrasena) {
+          toast.show("Las contraseñas no coinciden", { type: 'error', placement: 'top' });
+          return;
+        }
+      
+        axios.post(`${API_URL}/actualizar_password_usuario.php`, {
+          correo: gmai,
+          nueva_contrasena: nuevaContrasena
+        }).then(response => {
+          if (response.data.success) {
+            toast.show("Contraseña actualizada correctamente", { type: 'success', placement: 'top' });
+            setModalNuevaContrasenaVisible(false);
+            setgmail('');
+            setCodigo('');
+            setNuevaContrasena('');
+            setConfirmarContrasena('');
+          } else {
+            toast.show("Error al actualizar la contraseña", { type: 'error', placement: 'top' });
+          }
+        }).catch(error => {
+          console.log(error);
+          toast.show("Hubo un error en la solicitud", { type: 'error', placement: 'top' });
+        });
+      }
+      
     return (
          <View
                         style={estilos.contenedor}
@@ -65,12 +97,15 @@ export default function Recuperar_password(){
         </Text>
         <View style={estilos_importados.contenedores_inputs}>
         <Icon name="mail" size={30} />
-        <TextInput style={estilos_importados.inputs} onChangeText={setgmail} value={gmai} placeholder="Ingrese su correo electronico estudiantil" keyboardType='email-address' />
+        <TextInput style={estilos_importados.inputs} onChangeText={setgmail} value={gmai} placeholder="Ingrese su correo electronico" keyboardType='email-address' />
         </View>
         <TouchableOpacity style={[estilos_importados.boton,{backgroundColor:'#99d4eb'}]} onPress={comprobar_contrasena} >
                         <Text style={estilos_importados.botonTexto}>Recuperar Contraseña</Text>
                         <Icon name="arrow-forward" size={30} color={'white'} />
                     </TouchableOpacity>
+                    {cargando && (
+  <ActivityIndicator size="large" color="#2196F3" style={{ marginTop: 20 }} />
+)}
                     <Modal
         animationType="slide"
         transparent={true}
@@ -99,7 +134,48 @@ export default function Recuperar_password(){
             </View>
           </View>
         </View>
-      </Modal>
+      </Modal><Modal
+  animationType="slide"
+  transparent={true}
+  visible={modalNuevaContrasenaVisible}
+  onRequestClose={() => setModalNuevaContrasenaVisible(false)}
+>
+  <View style={estilos.modalFondo}>
+    <View style={estilos.modalContenido}>
+      <Text style={estilos.titulo}>Ingrese su nueva contraseña:</Text>
+
+      <TextInput
+        style={estilos.input}
+        placeholder="Nueva contraseña"
+        value={nuevaContrasena}
+        onChangeText={setNuevaContrasena}
+        secureTextEntry={true}
+      />
+
+      <TextInput
+        style={estilos.input}
+        placeholder="Repita la nueva contraseña"
+        value={confirmarContrasena}
+        onChangeText={setConfirmarContrasena}
+        secureTextEntry={true}
+      />
+
+      <View style={estilos.botones}>
+        <Pressable style={estilos.boton} onPress={guardar_nueva_contrasena}>
+          <Text style={estilos.textoBoton}>Guardar</Text>
+        </Pressable>
+        <Pressable
+          style={[estilos.boton, estilos.botonCerrar]}
+          onPress={() => setModalNuevaContrasenaVisible(false)}
+        >
+          <Text style={estilos.textoBoton}>Cancelar</Text>
+        </Pressable>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+
         </View>
         
         </View>

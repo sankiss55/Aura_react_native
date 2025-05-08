@@ -6,7 +6,10 @@ import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
 import { API_URL } from '../../otros/configuracion'; 
 import { SelectList } from 'react-native-dropdown-select-list';
+import { useFocusEffect } from '@react-navigation/native';
+import React from "react";
 export default function Grupo() {
+  const [grupoEditar, setGrupoEditar] = useState(null);
 
         const [cicloSeleccionado, setCicloSeleccionado] = useState("");
     const [listaCiclos, setListaCiclos] = useState([]);
@@ -86,14 +89,17 @@ export default function Grupo() {
     
     // obtenerciclos();
   };
-  useEffect(() => {
+
+  useFocusEffect(
+    React.useCallback(() => {
     const fetchCiclos = async () => {
         const opciones = await obtenerciclos(); // Espera el resultado
         setListaCiclos(opciones || []); // Lo asigna correctamente
       };
     
       fetchCiclos();
-    }, []);
+    }, [])
+  );
     function Guardar_grupo() {
         // Validación de campos
         if (!nombreCiclo.trim() || !cicloSeleccionado) {
@@ -139,7 +145,52 @@ export default function Grupo() {
           console.log(error);
         });
       }
-
+      const actualizarGrupo = () => {
+        if (!nombreCiclo.trim() || !cicloSeleccionado) {
+          Toast.show({
+            type: 'error',
+            text1: 'Campos incompletos',
+            text2: 'Por favor, completa todos los campos requeridos.',
+          });
+          return;
+        }
+      
+        axios.post(`${API_URL}/actualizar_grupo.php`, {
+          id_grupo: grupoEditar.id_grupo,
+          nombre_grupo: nombreCiclo,
+          id_ciclo: cicloSeleccionado,
+        })
+        .then(function (respuesta) {
+          if (respuesta.data.success === false) {
+            Toast.show({
+              type: 'error',
+              text1: 'Error',
+              text2: respuesta.data.message,
+            });
+          } else {
+            Toast.show({
+              type: 'success',
+              text1: 'Grupo actualizado',
+              text2: respuesta.data.message,
+            });
+      
+            obtenerciclos();
+            setModalAgregarVisible(false);
+            setGrupoEditar(null); // Limpiar el estado de edición
+            setNombreCiclo('');
+            setCicloSeleccionado('');
+          }
+        })
+        .catch(function (error) {
+          Toast.show({
+            type: 'error',
+            text1: 'Error de conexión',
+            text2: 'No se pudo actualizar el grupo.',
+          });
+          console.log(error);
+        });
+      };
+      
   return (
     <View style={style.container}>
         <TextInput
@@ -158,7 +209,10 @@ export default function Grupo() {
                <View style={style.buttonsContainer}>
                <TouchableOpacity
                 style={style.modifyButton}
-               
+                onPress={() => {
+                  setGrupoEditar(usuario); 
+                  setModalAgregarVisible(true);
+                }}
               >
                 <Icon name="pencil" size={20} color="#fff" />
                 <Text style={style.buttonText}>Modificar</Text>
@@ -176,50 +230,66 @@ export default function Grupo() {
       </ScrollView>
 
       <Agregar_btn onPress={() => setModalAgregarVisible(true)} />
-
       <Modal
-        animationType="slide"
-        transparent={true}
-        visible={modalAgregarVisible}
-        onRequestClose={() => setModalAgregarVisible(false)}
-      >
-        <View style={style.modalContainer}>
-          <View style={style.modalContent}>
-            <Text style={style.title}>Agregar Grupo</Text>
+  animationType="slide"
+  transparent={true}
+  visible={modalAgregarVisible}
+  onRequestClose={() => {
+    setModalAgregarVisible(false);
+    setGrupoEditar(null); // Limpiar los datos
+    setNombreCiclo('');
+    setCicloSeleccionado('');
+  }}
+>
+  <View style={style.modalContainer}>
+    <View style={style.modalContent}>
+      <Text style={style.title}>{grupoEditar ? 'Editar Grupo' : 'Agregar Grupo'}</Text>
 
-            <TextInput
-              placeholder="Nombre del Ciclo"
-              value={nombreCiclo}
-              onChangeText={setNombreCiclo}
-              style={style.input}
-            />
-<Text>Selecciona ciclo escolar:</Text>
-<SelectList
-  setSelected={(val) => setCicloSeleccionado(val)}
-  data={listaCiclos}
-  placeholder="Selecciona un ciclo"
-  boxStyles={{ marginBottom: 10 }}
-/>
+      <TextInput
+        placeholder="Nombre del Ciclo"
+        value={nombreCiclo || (grupoEditar ? grupoEditar.nombre_grupo : '')}
+        onChangeText={setNombreCiclo}
+        style={style.input}
+      />
+      <Text>Selecciona ciclo escolar:</Text>
+      <SelectList
+        setSelected={(val) => setCicloSeleccionado(val)}
+        data={listaCiclos}
+        placeholder="Selecciona un ciclo"
+        boxStyles={{ marginBottom: 10 }}
+        defaultOption={grupoEditar ? { key: grupoEditar.id_ciclo.toString()} : null}
+      />
 
-            <View style={style.buttonContainer}>
-              <TouchableOpacity
-                style={style.buttonCancelar}
-                onPress={() => setModalAgregarVisible(false)}
-              >
-                <Text style={style.buttonText}>Cancelar</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={style.buttonGuardar}
-                onPress={() => {
-                  Guardar_grupo();
-                }}
-              >
-                <Text style={style.buttonText}>Guardar</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <View style={style.buttonContainer}>
+        <TouchableOpacity
+          style={style.buttonCancelar}
+          onPress={() => {
+            setModalAgregarVisible(false);
+            setGrupoEditar(null); 
+            setNombreCiclo(''); 
+            setCicloSeleccionado(''); 
+          }}
+        >
+          <Text style={style.buttonText}>Cancelar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={style.buttonGuardar}
+          onPress={() => {
+            if (grupoEditar) {
+              actualizarGrupo();
+            } else {
+              Guardar_grupo();
+            }
+          }}
+        >
+          <Text style={style.buttonText}>{grupoEditar ? 'Actualizar' : 'Guardar'}</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  </View>
+</Modal>
+
+
     </View>
   );
 }

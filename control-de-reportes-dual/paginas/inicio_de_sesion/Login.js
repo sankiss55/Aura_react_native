@@ -22,13 +22,13 @@ export default function Login({ navigation }) {
         }).then(async function  (respuesta) {
             console.log(respuesta.data.respuesta);
             if(respuesta.data.success==false){
-                Toast.show(respuesta.data.respuesta, { type:'error'});
+                Toast.show(respuesta.data.respuesta, { type:'error', placement: 'top'});
                 return;
             }
             const datos= respuesta.data.respuesta[0];
             await Guardar_usuarios_globales(datos);
             navigation.replace('drawer');
-           Toast.show('🌟 ¡Bienvenido! '+ datos.username, { type:'success'});
+           Toast.show('🌟 ¡Bienvenido! '+ datos.username, { type:'success', placement: 'top'});
           }).catch(function(error){
             console.log(error);
           });
@@ -63,8 +63,8 @@ export default function Login({ navigation }) {
                         Bienvenido
                     </Text>
                     <View style={estilos_importados.contenedores_inputs}>
-                        <Icon name="person-sharp" size={30} />
-                        <TextInput style={estilos_importados.inputs} placeholder="Ingrese su usuario" value={usuario} onChangeText={setusuario} />
+                        <Icon name="mail" size={30} />
+                        <TextInput style={estilos_importados.inputs} placeholder="Ingrese su correo"  keyboardType='email-address' value={usuario} onChangeText={setusuario} />
                     </View>
 
                     <View style={[estilos_importados.contenedores_inputs,{paddingLeft:40, paddingRight:50}]}>

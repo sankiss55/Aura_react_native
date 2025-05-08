@@ -5,12 +5,14 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native';
 import { API_URL } from '../../otros/configuracion';
 
+import { useFocusEffect } from '@react-navigation/native';
 export default function Grupos({ route }) {
   const { idCiclo } = route.params;
   const [grupos, setGrupos] = useState([]);
   const navigation = useNavigation();
 
-  useEffect(() => {
+  useFocusEffect(
+         React.useCallback(() => {
     axios.post(`${API_URL}/buscar_grupo_depende_ciclo.php`, { id_ciclo: idCiclo })
       .then(respuesta => {
         if (respuesta.data.success) {
@@ -22,7 +24,8 @@ export default function Grupos({ route }) {
       .catch(error => {
         console.log('Error al obtener grupos:', error);
       });
-  }, []);
+    }, [])
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, Modal, TextInput, Switch, TouchableOpacity, ScrollView, Alert } from "react-native"; 
 import Agregar_btn from "../../componentes/componentes_app/agregar";
 import { useState, useEffect } from "react";
+import { useFocusEffect } from '@react-navigation/native';
+import React from "react";
 import axios from "axios";
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -12,7 +14,9 @@ const [listaCiclos, setListaCiclos] = useState([]);
       const [username, setUsername] = useState('');
   const [modalAgregarVisible, setModalAgregarVisible] = useState(false);
   const [usuarios, setUsuarios] = useState([]);
-  
+  const [modoEdicion, setModoEdicion] = useState(false);
+const [alumnoSeleccionado, setAlumnoSeleccionado] = useState(null);
+
 const [nombre, setNombre] = useState('');
 const [apellidoPaterno, setApellidoPaterno] = useState('');
 const [apellidoMaterno, setApellidoMaterno] = useState('');
@@ -87,15 +91,16 @@ const [apellidoMaterno, setApellidoMaterno] = useState('');
     
     // obtenerciclos();
   };
-  useEffect(() => {
+  useFocusEffect(
+    React.useCallback(() => {
     const fetchCiclos = async () => {
         const opciones = await obtenerciclos(); // Espera el resultado
         setListaCiclos(opciones || []); // Lo asigna correctamente
       };
     
       fetchCiclos();
-  }, []);
-
+    }, [])
+  );
   function guardar_ciclo_escolar() {
     // Validar que todos los campos estén completos
     if (!nombre || !apellidoPaterno || !apellidoMaterno || !cicloSeleccionado) {
@@ -153,7 +158,61 @@ const [apellidoMaterno, setApellidoMaterno] = useState('');
     setModalAgregarVisible(false);  
   }
   
+function limpiar_datos() {
+  setNombre('');
+  setApellidoPaterno('');
+  setApellidoMaterno('');
+  setCicloSeleccionado('');
+  setModalAgregarVisible(false);
+  setModoEdicion(false);
+  setAlumnoSeleccionado(null);
 
+
+  }
+  const actualizarAlumno = () => {
+    if (!nombre || !apellidoPaterno || !apellidoMaterno || !cicloSeleccionado) {
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Por favor completa todos los campos.',
+      });
+      return;
+    }
+  
+    axios.post(`${API_URL}/actualizar_alumno.php`, {
+      id_matricula: alumnoSeleccionado.id_matricula,
+      nombre,
+      apellido_paterno: apellidoPaterno,
+      apellido_materno: apellidoMaterno,
+      id_grupo: cicloSeleccionado,
+    })
+    .then(respuesta => {
+      if (respuesta.data.success) {
+        Toast.show({
+          type: 'success',
+          text1: 'Alumno actualizado',
+          text2: respuesta.data.message,
+        });
+        limpiar_datos();
+        obtenerciclos();
+      } else {
+        Toast.show({
+          type: 'error',
+          text1: 'Error',
+          text2: respuesta.data.message,
+        });
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'No se pudo actualizar el alumno.',
+      });
+    });
+  };
+  
   return (
     <View style={style.container}>
         <TextInput
@@ -175,7 +234,15 @@ const [apellidoMaterno, setApellidoMaterno] = useState('');
                <View style={style.buttonsContainer}>
                <TouchableOpacity
                 style={style.modifyButton}
-               
+                onPress={() => {
+                  setModoEdicion(true);
+                  setAlumnoSeleccionado(usuario);
+                  setNombre(usuario.nombre);
+                  setApellidoPaterno(usuario.apellido_paterno);
+                  setApellidoMaterno(usuario.apellido_materno);
+                  setCicloSeleccionado(usuario.id_grupo?.toString()); 
+                  setModalAgregarVisible(true);
+                }}
               >
                 <Icon name="pencil" size={20} color="#fff" />
                 <Text style={style.buttonText}>Modificar</Text>
@@ -228,16 +295,27 @@ const [apellidoMaterno, setApellidoMaterno] = useState('');
       />
 
     
- <SelectList
-                setSelected={(val) => setCicloSeleccionado(val)}
-                data={listaCiclos}
-                placeholder="Selecciona un grupo"
-                boxStyles={{ marginBottom: 10 }}
-              />
+<SelectList
+  setSelected={(val) => setCicloSeleccionado(val)}
+  data={listaCiclos}
+  placeholder="Selecciona un grupo"
+  boxStyles={{ marginBottom: 10 }}
+  defaultOption={
+    modoEdicion && alumnoSeleccionado
+      ? {
+          key: alumnoSeleccionado.id_grupo.toString(),
+          value: listaCiclos.find(op => op.key === alumnoSeleccionado.id_grupo.toString())?.value || ''
+        }
+      : undefined
+  }
+/>
+
       <View style={style.buttonContainer}>
         <TouchableOpacity
           style={style.buttonCancelar}
-          onPress={() => setModalAgregarVisible(false)}
+          onPress={() => {setModalAgregarVisible(false)
+            limpiar_datos();
+          }}
         >
           <Text style={style.buttonText}>Cancelar</Text>
         </TouchableOpacity>
@@ -245,8 +323,12 @@ const [apellidoMaterno, setApellidoMaterno] = useState('');
         <TouchableOpacity
           style={style.buttonGuardar}
           onPress={() => {
-            guardar_ciclo_escolar();
-            
+              if (modoEdicion) {
+                actualizarAlumno();
+              } else {
+                guardar_ciclo_escolar();
+              }
+          
           }}
         >
           <Text style={style.buttonText}>Guardar</Text>
