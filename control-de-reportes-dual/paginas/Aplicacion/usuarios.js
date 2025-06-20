@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
-import { View, TextInput, Text, TouchableOpacity, StyleSheet, Alert, ScrollView,Modal } from 'react-native';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SelectList } from 'react-native-dropdown-select-list';
 import Agregar_btn from '../../componentes/componentes_app/agregar';
 
-import Icon from 'react-native-vector-icons/Ionicons';
 import Toast from 'react-native-toast-message';
+import Icon from 'react-native-vector-icons/Ionicons';
 
-import { API_URL } from '../../otros/configuracion'; 
+import { API_URL } from '../../otros/configuracion';
 export default function Usuarios() {
   const [username, setUsername] = useState('');
   const [usuarios, setUsuarios] = useState([]);
@@ -101,6 +101,7 @@ export default function Usuarios() {
         placeholder="Ingresa el nombre de usuario"
         value={username}
         onChangeText={handleChange}
+        placeholderTextColor="#888"
       />
       <Modal
   transparent={true}
@@ -116,6 +117,7 @@ export default function Usuarios() {
   style={[styles.input, { backgroundColor: '#eee' }]}
   value={usuarioSeleccionado?.id_usuario?.toString()}
   editable={false}
+  placeholderTextColor="#888"
 />
       <TextInput
         style={styles.input}
@@ -124,6 +126,7 @@ export default function Usuarios() {
           setUsuarioSeleccionado({ ...usuarioSeleccionado, username: text })
         }
         placeholder="Nombre de usuario"
+        placeholderTextColor="#888"
       />
       <TextInput
         style={styles.input}
@@ -132,6 +135,7 @@ export default function Usuarios() {
           setUsuarioSeleccionado({ ...usuarioSeleccionado, correo: text })
         }
         placeholder="Correo"
+        placeholderTextColor="#888"
       />
 
       <Text style={{ marginBottom: 5 }}>Estado</Text>
@@ -295,12 +299,14 @@ export default function Usuarios() {
         placeholder="Correo"
         value={nuevoUsuario.correo}
         onChangeText={(text) => setNuevoUsuario({ ...nuevoUsuario, correo: text })}
+        placeholderTextColor="#888"
       />
       <TextInput
         style={styles.input}
         placeholder="Username"
         value={nuevoUsuario.username}
         onChangeText={(text) => setNuevoUsuario({ ...nuevoUsuario, username: text })}
+        placeholderTextColor="#888"
       />
       <TextInput
         style={styles.input}
@@ -308,6 +314,7 @@ export default function Usuarios() {
         secureTextEntry
         value={nuevoUsuario.contraseña}
         onChangeText={(text) => setNuevoUsuario({ ...nuevoUsuario, contraseña: text })}
+        placeholderTextColor="#888"
       />
 
       <Text style={{ marginBottom: 5 }}>Estado</Text>

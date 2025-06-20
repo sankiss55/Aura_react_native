@@ -35,7 +35,7 @@ export default function Alumnos({ route }) {
     <View style={{ width: '100%', padding: 10 }}>
       <TouchableOpacity style={[styles.boton, { backgroundColor: '#D32F2F' }]} onPress={() => {
         
-  Linking.openURL(`http://192.168.1.70/api_aura/pdf.php?pdf=9&id_ciclo=${id_escolar}&id_grupo=${idGrupo}`);
+  Linking.openURL(`${API_URL}pdf.php?pdf=9&id_ciclo=${id_escolar}&id_grupo=${idGrupo}`);
 }}
 >
         <Icon name="document-outline" size={20} color="#fff" style={styles.icono} />
@@ -43,7 +43,7 @@ export default function Alumnos({ route }) {
       </TouchableOpacity>
 
       <TouchableOpacity style={[styles.boton, { backgroundColor: '#388E3C' }]} onPress={() => {
-  Linking.openURL(`http://192.168.1.70/api_aura/pdf.php?id_ciclo=${id_escolar}&id_grupo=${idGrupo}`);
+  Linking.openURL(`${API_URL}pdf.php?id_ciclo=${id_escolar}&id_grupo=${idGrupo}`);
 }}>
         <Icon name="logo-microsoft" size={20} color="#fff" style={styles.icono} />
         <Text style={styles.texto}>Descargar Excel</Text>

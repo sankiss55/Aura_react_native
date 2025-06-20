@@ -1,14 +1,14 @@
 import { Nunito_400Regular, Nunito_700Bold, useFonts } from "@expo-google-fonts/nunito";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from '@react-navigation/native';
-import {  StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import axios from "axios";
+import { useState } from "react";
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Toast } from "react-native-toast-notifications";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Bolitas from "../../componentes/componentes_login/bolitas";
 import estilos_importados from "../../estilos/estilos_login/estilos_login_contrasena";
-import { useState } from "react";
-import axios from "axios";
-import { Toast } from "react-native-toast-notifications";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { API_URL } from '../../otros/configuracion'; 
+import { API_URL } from '../../otros/configuracion';
 export default function Login({ navigation }) {  
     const [ver_password, setVer_password]=useState(false);
     const navegacion = useNavigation();
@@ -20,7 +20,7 @@ export default function Login({ navigation }) {
             usuario:usuario,
             password:password,
         }).then(async function  (respuesta) {
-            console.log(respuesta.data.respuesta);
+            console.log(respuesta);
             if(respuesta.data.success==false){
                 Toast.show(respuesta.data.respuesta, { type:'error', placement: 'top'});
                 return;
@@ -64,12 +64,12 @@ export default function Login({ navigation }) {
                     </Text>
                     <View style={estilos_importados.contenedores_inputs}>
                         <Icon name="mail" size={30} />
-                        <TextInput style={estilos_importados.inputs} placeholder="Ingrese su correo"  keyboardType='email-address' value={usuario} onChangeText={setusuario} />
+                        <TextInput style={estilos_importados.inputs} placeholder="Ingrese su correo"  keyboardType='email-address' value={usuario} onChangeText={setusuario} placeholderTextColor="#888" />
                     </View>
 
                     <View style={[estilos_importados.contenedores_inputs,{paddingLeft:40, paddingRight:50}]}>
                         <Icon name="lock-closed" size={30}  />
-                        <TextInput style={estilos_importados.inputs} secureTextEntry={!ver_password}  placeholder="Ingrese su contraseña" value={password} onChangeText={setpassword} />
+                        <TextInput style={estilos_importados.inputs} secureTextEntry={!ver_password}  placeholder="Ingrese su contraseña" value={password} onChangeText={setpassword} placeholderTextColor="#888" />
                        <TouchableOpacity onPress={() => setVer_password(!ver_password)}>
                        <Icon name={ver_password ? "eye-off-outline" : "eye-outline"} size={30} />
                        </TouchableOpacity>

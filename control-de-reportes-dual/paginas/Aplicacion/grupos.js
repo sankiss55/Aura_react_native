@@ -1,13 +1,12 @@
-import { StyleSheet, Text, View, Modal, TextInput, Switch, TouchableOpacity, ScrollView, Alert } from "react-native"; 
-import Agregar_btn from "../../componentes/componentes_app/agregar";
-import { useState, useEffect } from "react";
+import { useFocusEffect } from '@react-navigation/native';
 import axios from "axios";
+import React, { useState } from "react";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SelectList } from 'react-native-dropdown-select-list';
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
-import { API_URL } from '../../otros/configuracion'; 
-import { SelectList } from 'react-native-dropdown-select-list';
-import { useFocusEffect } from '@react-navigation/native';
-import React from "react";
+import Agregar_btn from "../../componentes/componentes_app/agregar";
+import { API_URL } from '../../otros/configuracion';
 export default function Grupo() {
   const [grupoEditar, setGrupoEditar] = useState(null);
 
@@ -32,22 +31,6 @@ export default function Grupo() {
 
     setDebounceTimeout(timeout);
   };
-  function eliminar_ciclo_escolar(id) {
-
-    axios.post(`${API_URL}/borrarciclo_escolar.php`, {
-      id_usuario: id
-    }).then(function (respuesta) {
-      console.log(respuesta.data);
-      Toast.show({
-        type: 'success',
-        text1: 'Listo',
-        text2: 'El usuario se ha borrado exitosamente ',
-      });
-    }).catch(function (error) {
-      console.log(error);
-    });
-    obtenerciclos();
-  }
   const obtenerciclos = async () => {
     try {
       const response = await axios.post(`${API_URL}/all_grupo.php`);
@@ -190,7 +173,23 @@ export default function Grupo() {
           console.log(error);
         });
       };
-      
+      function eliminar(id) {
+    axios.post(`${API_URL}/eliminaciones.php`, {
+      id: id,
+      id_name:'id_grupo',
+      name:'grupo'
+    }).then(function(respuesta){
+      console.log(respuesta.data);
+       Toast.show({
+        type: respuesta.data.success==false?'error': 'success',
+        text1: respuesta.data.success==false?'Error': 'Listo',
+        text2: respuesta.data.message,
+      });
+      obtenerciclos(); 
+    }).catch(function(error){
+      console.log(error);
+    });
+    }
   return (
     <View style={style.container}>
         <TextInput
@@ -198,6 +197,7 @@ export default function Grupo() {
                 placeholder="Ingresa el nombre del grupo"
                 value={username}
                 onChangeText={handleChange}
+                placeholderTextColor="#888"
               />
       <ScrollView contentContainerStyle={style.listContainer}>
         {usuarios.map((usuario) => {
@@ -207,6 +207,13 @@ export default function Grupo() {
               <Text style={style.cicloText}>ID: {usuario.id_grupo}</Text>
               <Text style={style.cicloText}>Nombre: {usuario.nombre_grupo}</Text>
                <View style={style.buttonsContainer}>
+                 <TouchableOpacity
+                                  style={style.modifyButton2}
+                                    onPress={() => eliminar(usuario.id_grupo)}
+                                >
+                                  <Icon name="trash-outline" size={20} color="#fff" />
+                                  <Text style={style.buttonText}>Eliminar</Text>
+                                </TouchableOpacity>
                <TouchableOpacity
                 style={style.modifyButton}
                 onPress={() => {
@@ -250,6 +257,7 @@ export default function Grupo() {
         value={nombreCiclo || (grupoEditar ? grupoEditar.nombre_grupo : '')}
         onChangeText={setNombreCiclo}
         style={style.input}
+        placeholderTextColor="#888"
       />
       <Text>Selecciona ciclo escolar:</Text>
       <SelectList
@@ -389,6 +397,16 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 15,
+  },
+  
+   modifyButton2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(163, 16, 16)',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginLeft: 10,
   },
   modifyButton: {
     backgroundColor: '#2ECC71', // Verde

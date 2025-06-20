@@ -1,12 +1,11 @@
-import { Modal,Alert,Pressable,  KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import axios from 'axios';
+import { useState } from "react";
+import { ActivityIndicator, Modal, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useToast } from 'react-native-toast-notifications';
 import Icon from 'react-native-vector-icons/Ionicons';
 import Bolitas from "../../componentes/componentes_login/bolitas";
 import estilos_importados from "../../estilos/estilos_login/estilos_login_contrasena";
-import axios from 'axios';
-import { useState } from "react";
-import { useToast } from 'react-native-toast-notifications';
-import { API_URL } from '../../otros/configuracion'; 
-import { ActivityIndicator } from 'react-native'; 
+import { API_URL } from '../../otros/configuracion';
 export default function Recuperar_password(){
   
     const toast = useToast();
@@ -97,7 +96,7 @@ const [confirmarContrasena, setConfirmarContrasena] = useState('');
         </Text>
         <View style={estilos_importados.contenedores_inputs}>
         <Icon name="mail" size={30} />
-        <TextInput style={estilos_importados.inputs} onChangeText={setgmail} value={gmai} placeholder="Ingrese su correo electronico" keyboardType='email-address' />
+        <TextInput style={estilos_importados.inputs} onChangeText={setgmail} value={gmai} placeholder="Ingrese su correo electronico" keyboardType='email-address' placeholderTextColor="#888" />
         </View>
         <TouchableOpacity style={[estilos_importados.boton,{backgroundColor:'#99d4eb'}]} onPress={comprobar_contrasena} >
                         <Text style={estilos_importados.botonTexto}>Recuperar Contraseña</Text>
@@ -122,6 +121,7 @@ const [confirmarContrasena, setConfirmarContrasena] = useState('');
               value={codigo}
               onChangeText={setCodigo}
               keyboardType="numeric"
+              placeholderTextColor="#888"
             />
 
             <View style={estilos.botones}>
@@ -150,6 +150,7 @@ const [confirmarContrasena, setConfirmarContrasena] = useState('');
         value={nuevaContrasena}
         onChangeText={setNuevaContrasena}
         secureTextEntry={true}
+        placeholderTextColor="#888"
       />
 
       <TextInput
@@ -158,6 +159,7 @@ const [confirmarContrasena, setConfirmarContrasena] = useState('');
         value={confirmarContrasena}
         onChangeText={setConfirmarContrasena}
         secureTextEntry={true}
+        placeholderTextColor="#888"
       />
 
       <View style={estilos.botones}>

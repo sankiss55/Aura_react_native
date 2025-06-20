@@ -1,13 +1,12 @@
+import { useFocusEffect } from '@react-navigation/native';
 import axios from "axios";
-import { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SelectList } from 'react-native-dropdown-select-list';
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
 import Agregar_btn from "../../componentes/componentes_app/agregar";
-import { useFocusEffect } from '@react-navigation/native';
-import React from "react";
-import { API_URL } from '../../otros/configuracion'; 
+import { API_URL } from '../../otros/configuracion';
 
 export default function Semanas() {
   const [semanaSeleccionada, setSemanaSeleccionada] = useState(null);
@@ -49,6 +48,23 @@ const [modoEdicion, setModoEdicion] = useState(false);
     setCicloSeleccionado(String(semana.id_ciclo)); 
   };
   
+      function eliminar(id) {
+    axios.post(`${API_URL}/eliminaciones.php`, {
+      id: id,
+      id_name:'id_semanas',
+      name:'semanas'
+    }).then(function(respuesta){
+      console.log(respuesta.data);
+       Toast.show({
+        type: respuesta.data.success==false?'error': 'success',
+        text1: respuesta.data.success==false?'Error': 'Listo',
+        text2: respuesta.data.message,
+      });
+      obtenerciclos(); 
+    }).catch(function(error){
+      console.log(error);
+    });
+    }
   const handleChange = (text) => {
     setUsername(text);
 
@@ -61,45 +77,38 @@ const [modoEdicion, setModoEdicion] = useState(false);
 
     setDebounceTimeout(timeout);
   };
-  function eliminar_ciclo_escolar(id) {
-
-    axios.post(`${API_URL}/borrarciclo_escolar.php`, {
-      id_usuario: id
-    }).then(function (respuesta) {
-      console.log(respuesta.data);
-      Toast.show({
-        type: 'success',
-        text1: 'Listo',
-        text2: 'El usuario se ha borrado exitosamente ',
-      });
-    }).catch(function (error) {
-      console.log(error);
-    });
-    obtenerciclos();
-  }
   const obtenerciclos = async () => {
     try {
-      const response = await axios.post(`${API_URL}/all_semanas.php`);
-      if (response.data.success) {
-console.log(response.data.semanas);
-        setUsuarios(response.data.semanas);  // Suponiendo que la respuesta tiene un campo 'usuarios' con la lista de ciclos
-        const opciones = [];
-        const ciclosUnicos = new Set();  
-        response.data.semanas.forEach((item) => {
-          if (!ciclosUnicos.has(item.id_ciclo)) {
-            ciclosUnicos.add(item.id_ciclo);  
-            opciones.push({
-              key: item.id_ciclo.toString(),  // Asegúrate de que sea string
-              value: item.nombre_ciclo + '( Fecha de inicio: ' + item.fecha_inicio + ' Fecha final: ' + item.fecha_fin + ')'
-            });
+      // Obtener todas las semanas para la lista principal
+      const responseSemanas = await axios.post(`${API_URL}/all_semanas.php`);
+      if (responseSemanas.data.success) {
+        setUsuarios(responseSemanas.data.semanas);
+      }
+
+      // Obtener todos los ciclos escolares para el selector
+      const responseCiclos = await axios.post(`${API_URL}/all_ciclos_escolar.php`);
+      if (responseCiclos.data && Array.isArray(responseCiclos.data.usuarios)) {
+        // Filtrar ciclos únicos y activos
+        const ciclosMap = {};
+        responseCiclos.data.usuarios.forEach(item => {
+          if (item.activo !== 0 && !ciclosMap[item.id_ciclo]) {
+            ciclosMap[item.id_ciclo] = {
+              key: item.id_ciclo.toString(),
+              value: `${item.nombre_ciclo} (Inicio: ${item.fecha_inicio}, Fin: ${item.fecha_fin})`
+            };
           }
         });
-        
-        return opciones;
-        
-      } 
+        const ciclosUnicos = Object.values(ciclosMap);
+        setListaCiclos(ciclosUnicos);
+        return ciclosUnicos;
+      } else {
+        setListaCiclos([]);
+        return [];
+      }
     } catch (error) {
       Alert.alert("Error", "Hubo un problema al obtener los ciclos.");
+      setListaCiclos([]);
+      return [];
     }
   };
   const buscarUsuario = async (searchText) => {
@@ -212,6 +221,7 @@ console.log(response.data.semanas);
                 placeholder="Ingresa el nombre de la semana"
                 value={username}
                 onChangeText={handleChange}
+                placeholderTextColor="#888"
               />
       <ScrollView contentContainerStyle={style.listContainer}>
         {usuarios.map((usuario) => {
@@ -225,6 +235,13 @@ console.log(response.data.semanas);
               <Text style={style.cicloText}>Fecha Inicio: {fechaInicio}</Text>
               <Text style={style.cicloText}>Fecha Fin: {fechaFin}</Text>
                <View style={style.buttonsContainer}>
+                   <TouchableOpacity
+                                  style={style.modifyButton2}
+                                    onPress={() => eliminar(usuario.id_semanas)}
+                                >
+                                  <Icon name="trash-outline" size={20} color="#fff" />
+                                  <Text style={style.buttonText}>Eliminar</Text>
+                                </TouchableOpacity>
                <TouchableOpacity
                 style={style.modifyButton}
                onPress={() => abrirModalEditar(usuario)}
@@ -233,6 +250,7 @@ console.log(response.data.semanas);
                 <Icon name="pencil" size={20} color="#fff" />
                 <Text style={style.buttonText}>Modificar</Text>
               </TouchableOpacity>
+              
                              {/* <TouchableOpacity style={style.deleteButton} onPress={() => eliminar_ciclo_escolar(usuario.id_ciclo)}> 
                             
                               <Icon name="trash" size={20} color="#fff" />
@@ -262,6 +280,7 @@ console.log(response.data.semanas);
               value={nombreCiclo}
               onChangeText={setNombreCiclo}
               style={style.input}
+              placeholderTextColor="#888"
             />
 
             <Text>Fecha de Inicio:</Text>
@@ -273,6 +292,7 @@ console.log(response.data.semanas);
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Mes"
@@ -281,6 +301,7 @@ console.log(response.data.semanas);
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Año"
@@ -289,6 +310,7 @@ console.log(response.data.semanas);
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={4}
+                placeholderTextColor="#888"
               />
             </View>
 
@@ -301,6 +323,7 @@ console.log(response.data.semanas);
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Mes"
@@ -309,6 +332,7 @@ console.log(response.data.semanas);
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Año"
@@ -317,6 +341,7 @@ console.log(response.data.semanas);
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={4}
+                placeholderTextColor="#888"
               />
             </View>
             <Text>Selecciona ciclo escolar:</Text>
@@ -457,6 +482,16 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginTop: 15,
+  },
+  
+   modifyButton2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(163, 16, 16)',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginLeft: 10,
   },
   modifyButton: {
     backgroundColor: '#2ECC71', // Verde

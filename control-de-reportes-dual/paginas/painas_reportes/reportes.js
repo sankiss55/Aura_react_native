@@ -1,16 +1,14 @@
-import React, { useEffect, useState } from "react";
-import Agregar_btn from "../../componentes/componentes_app/agregar";
-import { Modal, View, Text, ScrollView, TouchableOpacity, StyleSheet } from "react-native";
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import axios from "axios";
-import Icon from "react-native-vector-icons/Ionicons";
-import { API_URL } from "../../otros/configuracion";
-import { useNavigation } from '@react-navigation/native';
 import * as DocumentPicker from 'expo-document-picker';
-import { TextInput } from "react-native";
-import { SelectList } from 'react-native-dropdown-select-list';
 import * as FileSystem from 'expo-file-system';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useState } from "react";
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SelectList } from 'react-native-dropdown-select-list';
 import Toast from 'react-native-toast-message';
+import Icon from "react-native-vector-icons/Ionicons";
+import Agregar_btn from "../../componentes/componentes_app/agregar";
+import { API_URL } from "../../otros/configuracion";
 
 import AsyncStorage from "@react-native-async-storage/async-storage";
 export default function Reportes({ route }) {
@@ -133,6 +131,7 @@ useFocusEffect(
         setModalAgregarVisible(false);
         buscar_usuarios();
       } else {
+        console.error(response.data);
         Toast.show({
           type: 'error',
           text1: 'Error al guardar',
@@ -241,6 +240,7 @@ useFocusEffect(
     marginBottom: 15,
     fontSize: 16
   }}
+  placeholderTextColor="#888"
 />
             <Text style={styles.buttonText}>Seleccionar PDF</Text>
             <TouchableOpacity

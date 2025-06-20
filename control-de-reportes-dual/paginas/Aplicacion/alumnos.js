@@ -1,13 +1,12 @@
-import { StyleSheet, Text, View, Modal, TextInput, Switch, TouchableOpacity, ScrollView, Alert } from "react-native"; 
-import Agregar_btn from "../../componentes/componentes_app/agregar";
-import { useState, useEffect } from "react";
 import { useFocusEffect } from '@react-navigation/native';
-import React from "react";
 import axios from "axios";
+import React, { useState } from "react";
+import { Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { SelectList } from 'react-native-dropdown-select-list';
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
-import { API_URL } from '../../otros/configuracion'; 
-import { SelectList } from 'react-native-dropdown-select-list';
+import Agregar_btn from "../../componentes/componentes_app/agregar";
+import { API_URL } from '../../otros/configuracion';
 export default function Alumnos() {
         const [cicloSeleccionado, setCicloSeleccionado] = useState("");
 const [listaCiclos, setListaCiclos] = useState([]);
@@ -35,22 +34,24 @@ const [apellidoMaterno, setApellidoMaterno] = useState('');
 
     setDebounceTimeout(timeout);
   };
-  function eliminar_ciclo_escolar(id) {
-
-    axios.post(`${API_URL}/borrarciclo_escolar.php`, {
-      id_usuario: id
-    }).then(function (respuesta) {
-      console.log(respuesta.data);
-      Toast.show({
-        type: 'success',
-        text1: 'Listo',
-        text2: 'El usuario se ha borrado exitosamente ',
+  
+        function eliminar(id) {
+      axios.post(`${API_URL}/eliminaciones.php`, {
+        id: id,
+        id_name:'id_matricula',
+        name:'alumnos'
+      }).then(function(respuesta){
+        console.log(respuesta.data);
+         Toast.show({
+          type: respuesta.data.success==false?'error': 'success',
+          text1: respuesta.data.success==false?'Error': 'Listo',
+          text2: respuesta.data.message,
+        });
+        obtenerciclos(); 
+      }).catch(function(error){
+        console.log(error);
       });
-    }).catch(function (error) {
-      console.log(error);
-    });
-    obtenerciclos();
-  }
+      }
   const obtenerciclos = async () => {
     try {
       const response = await axios.post(`${API_URL}/all_alumnos.php`);
@@ -220,6 +221,7 @@ function limpiar_datos() {
                 placeholder="Busca a alumno (nombre, apellido paterno o materno)"
                 value={username}
                 onChangeText={handleChange}
+                placeholderTextColor="#888"
               />
       <ScrollView contentContainerStyle={style.listContainer}>
         {usuarios.map((usuario) => {
@@ -232,6 +234,13 @@ function limpiar_datos() {
               <Text style={style.cicloText}>Grupo: {usuario.nombre_grupo}</Text>
              
                <View style={style.buttonsContainer}>
+                 <TouchableOpacity
+                                                  style={style.modifyButton2}
+                                                    onPress={() => eliminar(usuario.id_matricula)}
+                                                >
+                                                  <Icon name="trash-outline" size={20} color="#fff" />
+                                                  <Text style={style.buttonText}>Eliminar</Text>
+                                                </TouchableOpacity>
                <TouchableOpacity
                 style={style.modifyButton}
                 onPress={() => {
@@ -276,6 +285,7 @@ function limpiar_datos() {
         value={nombre}
         onChangeText={setNombre}
         style={style.input}
+        placeholderTextColor="#888"
       />
 
       {/* Campo Apellido Paterno */}
@@ -284,6 +294,7 @@ function limpiar_datos() {
         value={apellidoPaterno}
         onChangeText={setApellidoPaterno}
         style={style.input}
+        placeholderTextColor="#888"
       />
 
       {/* Campo Apellido Materno */}
@@ -292,6 +303,7 @@ function limpiar_datos() {
         value={apellidoMaterno}
         onChangeText={setApellidoMaterno}
         style={style.input}
+        placeholderTextColor="#888"
       />
 
     
@@ -438,8 +450,18 @@ const style = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 15,
   },
+  
+   modifyButton2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(163, 16, 16)',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
   modifyButton: {
-    backgroundColor: '#2ECC71', // Verde
+    backgroundColor: '#2ECC71', 
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
@@ -447,7 +469,7 @@ const style = StyleSheet.create({
     alignItems: 'center',
   },
   deleteButton: {
-    backgroundColor: '#E74C3C', // Rojo
+    backgroundColor: '#E74C3C', 
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,

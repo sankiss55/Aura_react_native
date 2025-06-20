@@ -1,12 +1,11 @@
-import { StyleSheet, Text, View, Modal, TextInput, Switch, TouchableOpacity, ScrollView, Alert } from "react-native"; 
-import Agregar_btn from "../../componentes/componentes_app/agregar";
-import { useState, useEffect } from "react";
 import { useFocusEffect } from '@react-navigation/native';
-import React from "react";
 import axios from "axios";
+import React, { useState } from "react";
+import { Alert, Modal, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Toast from "react-native-toast-message";
 import Icon from 'react-native-vector-icons/Ionicons';
-import { API_URL } from '../../otros/configuracion'; 
+import Agregar_btn from "../../componentes/componentes_app/agregar";
+import { API_URL } from '../../otros/configuracion';
 
 export default function CicloEscolar() {
   const [username, setUsername] = useState('');
@@ -201,6 +200,22 @@ export default function CicloEscolar() {
     
     // obtenerciclos();
   };
+  function eliminar(id) {
+    axios.post(`${API_URL}/eliminaciones.php`, {
+      id: id,
+      id_name:'id_ciclo',
+      name:'ciclo_escolar'
+    }).then(function(respuesta){
+      console.log(respuesta.data);
+       Toast.show({
+        type: respuesta.data.success==false?'error': 'success',
+        text1: respuesta.data.success==false?'Error': 'Listo',
+        text2: respuesta.data.message,
+      });
+    }).catch(function(error){
+      console.log(error);
+    });
+    }
   return (
     <View style={style.container}>
         <TextInput
@@ -208,6 +223,7 @@ export default function CicloEscolar() {
                 placeholder="Ingresa el nombre de ciclo escolar"
                 value={username}
                 onChangeText={handleChange}
+                placeholderTextColor="#888"
               />
       <ScrollView contentContainerStyle={style.listContainer}>
         {usuarios.map((usuario) => {
@@ -229,6 +245,13 @@ export default function CicloEscolar() {
                 >
                   <Icon name="pencil" size={20} color="#fff" />
                   <Text style={style.buttonText}>Modificar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={style.modifyButton2}
+                  onPress={() => eliminar(usuario.id_ciclo)}
+                >
+                  <Icon name="trash-outline" size={20} color="#fff" />
+                  <Text style={style.buttonText}>Eliminar</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -254,6 +277,7 @@ export default function CicloEscolar() {
               value={nombreCiclo}
               onChangeText={setNombreCiclo}
               style={style.input}
+              placeholderTextColor="#888"
             />
 
             <Text>Fecha de Inicio:</Text>
@@ -265,6 +289,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Mes"
@@ -273,6 +298,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Año"
@@ -281,6 +307,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={4}
+                placeholderTextColor="#888"
               />
             </View>
 
@@ -293,6 +320,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Mes"
@@ -301,6 +329,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Año"
@@ -309,6 +338,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={4}
+                placeholderTextColor="#888"
               />
             </View>
 
@@ -347,6 +377,7 @@ export default function CicloEscolar() {
               value={nombreCiclo}
               onChangeText={setNombreCiclo}
               style={style.input}
+              placeholderTextColor="#888"
             />
 
             <Text>Fecha de Inicio:</Text>
@@ -358,6 +389,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Mes"
@@ -366,6 +398,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Año"
@@ -374,6 +407,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={4}
+                placeholderTextColor="#888"
               />
             </View>
 
@@ -386,6 +420,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Mes"
@@ -394,6 +429,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={2}
+                placeholderTextColor="#888"
               />
               <TextInput
                 placeholder="Año"
@@ -402,6 +438,7 @@ export default function CicloEscolar() {
                 style={style.inputSmall}
                 keyboardType="numeric"
                 maxLength={4}
+                placeholderTextColor="#888"
               />
             </View>
 
@@ -454,6 +491,15 @@ const style = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#4CAF50',
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 5,
+    marginLeft: 10,
+  },
+   modifyButton2: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgb(163, 16, 16)',
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 5,
